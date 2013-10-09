@@ -249,7 +249,7 @@ PHP_FUNCTION(boxwood_exists)
     int num_args = ZEND_NUM_ARGS();
 
     if (num_args == 2) {
-        if (zend_parse_parameters(num_args TSRMLS_CC, "zz", &znode, &ztext, &zreplacement) == FAILURE) {
+        if (zend_parse_parameters(num_args TSRMLS_CC, "zz", &znode, &ztext) == FAILURE) {
             WRONG_PARAM_COUNT;
         }
     } else if (num_args == 3) {
