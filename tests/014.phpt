@@ -9,12 +9,12 @@ boxwood_add_text($r, "airplane");
 boxwood_add_text($r, "train");
 
 $tests = array(
-    'my train airplane norway',
-    'my norway',
+    'airplane norway',
+    'my norway train',
     'toast ting',
     'no way',
-    'drive my norway',
-    'fly airplane'
+    'drive my train to norway',
+    'fly airplane to tokyo'
 );
 
 foreach ($tests as $test) {
