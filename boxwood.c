@@ -394,6 +394,69 @@ static int bw_replace_proper(struct bw_node_t *root, byte *modified_bytes, byte 
 
 }
 
+  /*
+    start at root of trie and first byte
+    if byte is not in trie, go to next byte and repeat
+    if byte is in trie, save position as bad_word_start_maybe, advance byte and advance down trie
+      while byte is in trie, continue advancing each
+      if we get to the point where there is nothing in the next[] array on the trie node, we've reached the end of the
+        word, so replace from bad_word_start_maybe+1 to current byte with *s, and resume with root of trie and next byte
+      if we get to the point where the next[] array is not empty but does not contain an entry for the current byte
+        then we've diverged from the stem that matches, so don't do any replacement and start re-parsing at
+        bad_word_start_maybe+1
+
+    */
+static int bw_exists_proper(struct bw_node_t *root, byte *bytes_to_walk, int len, int check_multibyte, byte *word_boundary_chars) {
+    int match_start_maybe, i = 0, shrunk_bytes = 0, previous_terminal = 0;
+    int endok = 0;
+    struct bw_node_t *current_node;
+
+    while (i < len) {
+        if ((! bw_node_has_next(root, bytes_to_walk[i])) // no matches at start
+            || (! boundary_before_word(word_boundary_chars, i, bytes_to_walk)))
+            {
+                i++;
+            }
+        else {
+            match_start_maybe = i;
+            current_node = root;
+            previous_terminal = 0;
+            do {
+                current_node = current_node->next[bytes_to_walk[i]];
+                i++;
+                if (current_node->is_terminal
+                    && boundary_after_word(word_boundary_chars, i, len, bytes_to_walk))
+                    {
+                        previous_terminal = i;
+                    }
+            }
+            while (bw_node_has_next(current_node, bytes_to_walk[i]));
+
+            /* If we've stopped advancing because we've reached a character in the
+             * text which doesn't match the next byte in the trie -- then check to
+             * see if there was a previous node on our traversal that was marked
+             * as terminal -- that means even though we didn't match the longer
+             * word, there was a previous shorter prefix that we should treat as
+             * a match
+             */
+            if ((! current_node->is_terminal) && previous_terminal) {
+                i = previous_terminal;
+            }
+
+            /* if we've reached the end of the word, replace */
+            if (((! current_node->has_next) && boundary_after_word(word_boundary_chars, i, len, bytes_to_walk)) || previous_terminal) {
+                return 1;
+            }
+            else { /* diverging from stem, start reparsing */
+                i = match_start_maybe + 1;
+            }
+        }
+    }
+
+    return 0;
+
+}
+
 /**
  * Replace sequences in text that match words added to the trie. If the trie
  * has a folding trie, then it is used to make the replacements case-insensitive.
@@ -424,6 +487,28 @@ byte *bw_replace_text(struct bw_trie_t *trie, byte *text, byte replacement, int 
 
     return modified_text;
 
+}
+/*
+* Return 1 is any are found, 0 for false
+*/
+int bw_exists_text(struct bw_trie_t *trie, byte *text, int wordbound) {
+  int text_len = strlen((char *)text);
+  int result = 0;
+
+    byte *text_to_walk;
+    if (trie->case_insensitive && trie->folding_trie) {
+        text_to_walk = case_fold_lower(trie->folding_trie, text, text_len);
+    } else {
+        text_to_walk = text;
+    }
+
+    result = bw_exists_proper(trie->root, text_to_walk, text_len, 1, wordbound ? trie->word_boundary_chars : NULL);
+
+    if (text_to_walk != text) {
+        free(text_to_walk);
+    }
+
+    return result;
 }
 
 /**

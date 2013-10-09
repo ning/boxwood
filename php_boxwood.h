@@ -39,6 +39,7 @@ PHP_FUNCTION(boxwood_new);
 PHP_FUNCTION(boxwood_add_text);
 PHP_FUNCTION(boxwood_replace_text);
 PHP_FUNCTION(boxwood_set_word_boundary_bytes);
+PHP_FUNCTION(boxwood_exists);
 
 ZEND_BEGIN_MODULE_GLOBALS(boxwood)
 struct case_fold_branch_t *folding_trie;
