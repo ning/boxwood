@@ -281,8 +281,12 @@ PHP_FUNCTION(boxwood_exists)
 
     if (Z_TYPE_P(ztext) == IS_STRING) {
         result = bw_exists_text(trie, (byte *) Z_STRVAL_P(ztext), wordbound);
-        if(result == 1) RETURN_TRUE;
-        else RETURN_FALSE;
+        if(result == 1) {
+            RETURN_TRUE;
+        }
+        else {
+            RETURN_FALSE;
+        }
     }
 
     RETURN_FALSE:
