@@ -289,5 +289,5 @@ PHP_FUNCTION(boxwood_exists)
         }
     }
 
-    RETURN_FALSE:
+    RETURN_FALSE;
 }
