@@ -18,7 +18,7 @@ $tests = array(
 );
 
 foreach ($tests as $test) {
-    echo (boxwood_exists($r, $test) === true ? "yes" : no), "\n";
+    echo (boxwood_exists($r, $test) === true ? "yes" : "no"), "\n";
 }
 ?>
 --EXPECT--
